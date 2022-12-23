@@ -1,0 +1,3 @@
+C:/Users/Floreat Beheer BV/Desktop/Uni/Y4Q2 Algorithms for Model Checking/A2/parity-game-solver/cmake-build-debug/CMakeFiles/parity_game_solver.dir
+C:/Users/Floreat Beheer BV/Desktop/Uni/Y4Q2 Algorithms for Model Checking/A2/parity-game-solver/cmake-build-debug/CMakeFiles/edit_cache.dir
+C:/Users/Floreat Beheer BV/Desktop/Uni/Y4Q2 Algorithms for Model Checking/A2/parity-game-solver/cmake-build-debug/CMakeFiles/rebuild_cache.dir
