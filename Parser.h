@@ -4,6 +4,7 @@
 
 #include <string>
 #include <memory>
+#include "ParityGame.h"
 
 using namespace std;
 
@@ -25,7 +26,11 @@ protected:
     void requireWhiteSpace();
 
 public:
-    virtual shared_ptr<T> parse(string input) = 0;
+    virtual shared_ptr<T> parse(string input);
+};
+
+class ParityGameParser : Parser<ParityGame> {
+    shared_ptr<ParityGame> parse(string input) override;
 };
 
 #endif //PARITY_GAME_SOLVER_PARSER_H

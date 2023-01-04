@@ -12,8 +12,8 @@ using namespace std;
 
 template<class T>
 Parser<T>::Parser() {
-    i = 0;
     I = "";
+    i = 0;
 }
 
 template<class T>
@@ -66,6 +66,19 @@ void Parser<T>::requireWhiteSpace() {
     skipWhiteSpace();
 }
 
+template<class T>
+shared_ptr<T> Parser<T>::parse(string input) {
+    I = std::move(input);
+    i = 0;
+    return nullptr;
+}
+
 
 /// Parity-game parsing
 
+shared_ptr<ParityGame> ParityGameParser::parse(string input) {
+    Parser::parse(input);
+
+    // TODO: Read header (if present)
+    // TODO: Read node specification lines
+}
