@@ -21,15 +21,13 @@ struct NodeSpec {
 };
 
 class ParityGame {
+public:
     uint32_t maxId;
     vector<shared_ptr<NodeSpec>> nodes;
 
     void addNode(shared_ptr<NodeSpec> &node);
 
     explicit ParityGame(uint32_t maxId = 0);
-
-private:
-    uint32_t lastId;
 };
 
 

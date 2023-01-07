@@ -9,7 +9,6 @@ using namespace std;
 
 ParityGame::ParityGame(uint32_t maxId) {
     this->maxId = maxId;
-    this->lastId = 0;
 
     // Resize node list to hold maxId + 1 elements
     this->nodes.resize(maxId + 1);
@@ -17,14 +16,13 @@ ParityGame::ParityGame(uint32_t maxId) {
 
 void ParityGame::addNode(shared_ptr<NodeSpec> &node) {
     if (this->maxId > 0) {
-        if (this->lastId >= this->maxId) {
+        if (node->id > this->maxId) {
             throw invalid_argument("New node exceeds maximum node ID");
         }
 
-        this->nodes[this->lastId] = node;
+        this->nodes[node->id] = node;
     } else {
+        // TODO: Remove existing node with specified ID
         this->nodes.push_back(node);
     }
-
-    this->lastId++;
 }

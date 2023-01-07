@@ -25,11 +25,15 @@ protected:
 
     void requireWhiteSpace();
 
+    uint32_t parseUnsignedInt32();
+
 public:
     virtual shared_ptr<T> parse(string input);
 };
 
 class ParityGameParser : Parser<ParityGame> {
+public:
+    ParityGameParser();
     shared_ptr<ParityGame> parse(string input) override;
 };
 
