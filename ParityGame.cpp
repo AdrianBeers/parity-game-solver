@@ -2,8 +2,8 @@
 // Created by jens on 4-1-2023.
 //
 
-#include <stdexcept>
 #include "ParityGame.h"
+#include <stdexcept>
 
 using namespace std;
 

@@ -3,8 +3,8 @@
 //
 
 #include <cstdint>
-#include <string>
 #include <memory>
+#include <string>
 #include <vector>
 
 using namespace std;
@@ -30,5 +30,4 @@ public:
     explicit ParityGame(uint32_t maxId = 0);
 };
 
-
-#endif //PARITY_GAME_SOLVER_PARITYGAME_H
+#endif // PARITY_GAME_SOLVER_PARITYGAME_H
