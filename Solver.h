@@ -16,6 +16,7 @@ class Solver {
 
     shared_ptr<Measure> prog(shared_ptr<ProgressMeasure> &rho, shared_ptr<NodeSpec> &v, shared_ptr<NodeSpec> &w);
     shared_ptr<ProgressMeasure> lift(shared_ptr<ProgressMeasure> &rho, shared_ptr<NodeSpec> &v);
+    bool isStabilised(shared_ptr<ProgressMeasure> &rho, shared_ptr<ProgressMeasure> &rhoLifted);
 
 public:
     void initialize(shared_ptr<ParityGame> parityGame);
