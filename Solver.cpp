@@ -3,6 +3,22 @@
 using namespace std;
 
 void Solver::initialize(shared_ptr<ParityGame> parityGame) {
+    uint32_t maxPriority = 0;
+
+    for (shared_ptr<NodeSpec> node : G->nodes) {
+        uint32_t nextPriority = (*node).priority;
+
+        if (maxPriority < nextPriority) {
+            maxPriority = nextPriority;
+        }
+    }
+
+    d = 1 + maxPriority;
+
+    vector<vector<uint32_t>> M(d);
+
+    for (int i = 0; i < d; i++) {
+    }
 }
 
 shared_ptr<Measure> Solver::prog(shared_ptr<ProgressMeasure> &rho, shared_ptr<NodeSpec> &v, shared_ptr<NodeSpec> &w) {
@@ -21,12 +37,12 @@ shared_ptr<Measure> Solver::prog(shared_ptr<ProgressMeasure> &rho, shared_ptr<No
 
     // Distinguish even and odd priority of v
     if (pv % 2 == 0) {
-        for (int i = 0; i < pv; i++) {
+        for (int i = 0; i <= pv; i++) {
             result[i] = rhow[i];
         }
     } else {
-        for (int i = 0; i < pv; i++) {
-            if (i < pv - 1) {
+        for (int i = 0; i <= pv; i++) {
+            if (i < pv) {
                 // For all elements in the result excluding the last, set it equal to rhow
                 result[i] = rhow[i];
             } else {
