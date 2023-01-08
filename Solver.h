@@ -6,6 +6,9 @@
 
 using namespace std;
 
+enum Strategy { Input,
+                Random };
+
 typedef vector<uint32_t> Measure;
 typedef map<shared_ptr<NodeSpec>, shared_ptr<Measure>> ProgressMeasure;
 
@@ -21,7 +24,5 @@ class Solver {
 
 public:
     void initialize(shared_ptr<ParityGame> parityGame);
-
-    shared_ptr<ProgressMeasure> SPMInputOrder();
-    shared_ptr<ProgressMeasure> SPMRandomOrder();
+    shared_ptr<ProgressMeasure> SPM(Strategy strategy);
 };

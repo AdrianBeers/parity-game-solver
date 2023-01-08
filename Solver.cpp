@@ -1,4 +1,6 @@
 #include "Solver.h"
+#include <algorithm>
+#include <random>
 
 using namespace std;
 
@@ -144,7 +146,7 @@ bool Solver::isStabilised(shared_ptr<ProgressMeasure> &rho, shared_ptr<ProgressM
     return true;
 }
 
-shared_ptr<ProgressMeasure> Solver::SPMInputOrder() {
+shared_ptr<ProgressMeasure> Solver::SPM(Strategy strategy) {
     // Initialize rho with zeroes
     shared_ptr<ProgressMeasure> rho;
 
@@ -155,26 +157,58 @@ shared_ptr<ProgressMeasure> Solver::SPMInputOrder() {
         (*rho)[node] = measure;
     }
 
-    // Variables to keep track of looping
-    uint32_t nodesVisited = 0;
-    uint32_t nodesStabilised = 0;
-    uint32_t nodesTotal = G->nodes.size();
+    // Perform lifting according to strategy
+    switch (strategy) {
+    case Strategy::Input: {
+        // Variables to keep track of looping
+        uint32_t nodesVisited = 0;
+        uint32_t nodesStabilised = 0;
+        uint32_t nodesTotal = G->nodes.size();
 
-    while (nodesStabilised < nodesTotal) {
-        shared_ptr<ProgressMeasure> rhoLifted = lift(rho, G->nodes[nodesVisited % nodesTotal]);
+        while (nodesStabilised < nodesTotal) {
+            shared_ptr<ProgressMeasure> rhoLifted = lift(rho, G->nodes[nodesVisited % nodesTotal]);
 
-        while (!isStabilised(rho, rhoLifted)) {
-            // If rho was not already stabilised, reset nodesStabilised
-            nodesStabilised = 0;
+            while (!isStabilised(rho, rhoLifted)) {
+                // If rho was not already stabilised, reset nodesStabilised
+                nodesStabilised = 0;
 
-            // Continue lifting rho
-            rho = rhoLifted;
-            rhoLifted = lift(rho, G->nodes[nodesVisited % nodesTotal]);
+                // Continue lifting rho
+                rho = rhoLifted;
+                rhoLifted = lift(rho, G->nodes[nodesVisited % nodesTotal]);
+            }
+
+            nodesVisited++;
+            nodesStabilised++;
         }
 
-        nodesVisited++;
-        nodesStabilised++;
+        return rho;
     }
+    case Strategy::Random:
+        // Shuffle the nodes first
+        vector<shared_ptr<NodeSpec>> nodes = G->nodes;
+        shuffle(begin(nodes), end(nodes), default_random_engine{});
 
-    return rho;
+        // Variables to keep track of looping
+        uint32_t nodesVisited = 0;
+        uint32_t nodesStabilised = 0;
+        uint32_t nodesTotal = nodes.size();
+
+        while (nodesStabilised < nodesTotal) {
+            shared_ptr<ProgressMeasure> rhoLifted = lift(rho, nodes[nodesVisited % nodesTotal]);
+
+            while (!isStabilised(rho, rhoLifted)) {
+                // If rho was not already stabilised, reset nodesStabilised
+                nodesStabilised = 0;
+
+                // Continue lifting rho
+                rho = rhoLifted;
+                rhoLifted = lift(rho, nodes[nodesVisited % nodesTotal]);
+            }
+
+            nodesVisited++;
+            nodesStabilised++;
+        }
+
+        return rho;
+    }
 }
