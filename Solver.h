@@ -6,7 +6,7 @@
 
 using namespace std;
 
-typedef pair<bool, vector<uint32_t>> Measure;
+typedef vector<uint32_t> Measure;
 typedef map<shared_ptr<NodeSpec>, shared_ptr<Measure>> ProgressMeasure;
 
 class Solver {

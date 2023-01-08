@@ -6,28 +6,73 @@ void Solver::initialize(shared_ptr<ParityGame> parityGame) {
 }
 
 shared_ptr<Measure> Solver::prog(shared_ptr<ProgressMeasure> &rho, shared_ptr<NodeSpec> &v, shared_ptr<NodeSpec> &w) {
-    return;
+    uint32_t pv = (*v).priority;
+    Measure rhow = (*(*rho)[w]);
+    Measure result;
+
+    // Initialize result with zeroes
+    vector<uint32_t> result(d, 0);
+
+    // If rhow is tau, the result will be tau as well
+    if (rhow.empty()) {
+        result.clear();
+        return make_shared<Measure>(result);
+    }
+
+    // Distinguish even and odd priority of v
+    if (pv % 2 == 0) {
+        for (int i = 0; i < pv; i++) {
+            result[i] = rhow[i];
+        }
+    } else {
+        for (int i = 0; i < pv; i++) {
+            if (i < pv - 1) {
+                // For all elements in the result excluding the last, set it equal to rhow
+                result[i] = rhow[i];
+            } else {
+                for (int j = 0; j < M[pv].size(); j++) {
+                    if (rhow[i] == M[pv][j]) {
+                        if (j + 1 == M[pv].size()) {
+                            // If rho can not be incremented for this priority, the result becomes tau
+                            result.clear();
+                        } else {
+                            // Else, increment rho for this priority
+                            result[i] = M[pv][j + 1];
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return make_shared<Measure>(result);
 }
 
 bool Solver::progLessOrEqual(shared_ptr<Measure> progA, shared_ptr<Measure> progB) {
     // If progB is tau, return true
-    if ((*progB).first) {
+    if ((*progB).empty()) {
         return true;
     }
 
-    // If some m_i in progA is larger than m_i in progB, return false
+    // Else if progA is tau but progB is not, return false
+    if ((*progA).empty()) {
+        return false;
+    }
+
+    // Else if some m_i in progA is larger than m_i in progB, return false
     for (int i = 0; i < d; i++) {
-        if ((*progA).second[i] > (*progB).second[i]) {
+        if ((*progA)[i] > (*progB)[i]) {
             return false;
         }
     }
 
+    // Else, return true
     return true;
 }
 
 shared_ptr<ProgressMeasure> Solver::lift(shared_ptr<ProgressMeasure> &rho, shared_ptr<NodeSpec> &v) {
     // If measure is already tau, no lift is possible
-    if ((*(*rho)[v]).first) {
+    if ((*(*rho)[v]).empty()) {
         return rho;
     }
 
@@ -65,18 +110,21 @@ bool Solver::isStabilised(shared_ptr<ProgressMeasure> &rho, shared_ptr<ProgressM
         Measure measureRhoLifted = (*(*rhoLifted)[node]);
 
         // If measure was lifted to tau, it is not stabilised
-        if (measureRho.first != measureRhoLifted.first) {
+        if (!measureRho.empty() && measureRhoLifted.empty()) {
             return false;
         }
 
-        // If some m was lifted, it is not stabilised
-        for (int i = 0; i < d; i++) {
-            if (measureRho.second[i] != measureRhoLifted.second[i]) {
-                return false;
+        if (!measureRho.empty() && !measureRhoLifted.empty()) {
+            for (int i = 0; i < d; i++) {
+                // If some m_i was lifted, it is not stabilised
+                if (measureRho[i] != measureRhoLifted[i]) {
+                    return false;
+                }
             }
         }
     }
 
+    // If nothing was lifted, it is stabilised
     return true;
 }
 
@@ -86,7 +134,7 @@ shared_ptr<ProgressMeasure> Solver::SPMInputOrder() {
 
     for (shared_ptr<NodeSpec> node : G->nodes) {
         vector<uint32_t> zeroes(d, 0);
-        shared_ptr<Measure> measure = make_shared<Measure>(make_pair(false, zeroes));
+        shared_ptr<Measure> measure = make_shared<Measure>(zeroes);
 
         (*rho)[node] = measure;
     }
