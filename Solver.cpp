@@ -14,10 +14,28 @@ shared_ptr<ProgressMeasure> Solver::lift(shared_ptr<ProgressMeasure> &rho, share
 }
 
 bool Solver::isStabilised(shared_ptr<ProgressMeasure> &rho, shared_ptr<ProgressMeasure> &rhoLifted) {
-    return;
+    for (shared_ptr<NodeSpec> node : G->nodes) {
+        Measure measureRho = (*(*rho)[node]);
+        Measure measureRhoLifted = (*(*rhoLifted)[node]);
+
+        // If measure was lifted to tau, it is not stabilised
+        if (measureRho.first != measureRhoLifted.first) {
+            return false;
+        }
+
+        // If some m was lifted, it is not stabilised
+        for (int i = 0; i < d; i++) {
+            if (measureRho.second[i] != measureRhoLifted.second[i]) {
+                return false;
+            }
+        }
+    }
+
+    return true;
 }
 
 shared_ptr<ProgressMeasure> Solver::SPMInputOrder() {
+    // Initialize rho with zeroes
     shared_ptr<ProgressMeasure> rho;
 
     for (shared_ptr<NodeSpec> node : G->nodes) {
@@ -27,6 +45,7 @@ shared_ptr<ProgressMeasure> Solver::SPMInputOrder() {
         (*rho)[node] = measure;
     }
 
+    // Variables to keep track of looping
     uint32_t nodesVisited = 0;
     uint32_t nodesStabilised = 0;
     uint32_t nodesTotal = G->nodes.size();
@@ -35,7 +54,10 @@ shared_ptr<ProgressMeasure> Solver::SPMInputOrder() {
         shared_ptr<ProgressMeasure> rhoLifted = lift(rho, G->nodes[nodesVisited % nodesTotal]);
 
         while (!isStabilised(rho, rhoLifted)) {
+            // If rho was not already stabilised, reset nodesStabilised
             nodesStabilised = 0;
+
+            // Continue lifting rho
             rho = rhoLifted;
             rhoLifted = lift(rho, G->nodes[nodesVisited % nodesTotal]);
         }
