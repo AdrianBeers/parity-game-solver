@@ -15,6 +15,7 @@ class Solver {
     uint32_t d;
 
     shared_ptr<Measure> prog(shared_ptr<ProgressMeasure> &rho, shared_ptr<NodeSpec> &v, shared_ptr<NodeSpec> &w);
+    bool progLessOrEqual(shared_ptr<Measure> progA, shared_ptr<Measure> progB);
     shared_ptr<ProgressMeasure> lift(shared_ptr<ProgressMeasure> &rho, shared_ptr<NodeSpec> &v);
     bool isStabilised(shared_ptr<ProgressMeasure> &rho, shared_ptr<ProgressMeasure> &rhoLifted);
 
