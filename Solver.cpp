@@ -1,26 +1,49 @@
 #include "Solver.h"
 #include <algorithm>
 #include <random>
+#include <iostream>
 
 using namespace std;
 
 void Solver::initialize(shared_ptr<ParityGame> &parityGame) {
+    G = parityGame;
+
+    // Find maximum node priority of all nodes
     uint32_t maxPriority = 0;
-
-    for (shared_ptr<NodeSpec> &node : G->nodes) {
-        uint32_t nextPriority = (*node).priority;
-
+    for (auto &node: G->nodes) {
+        uint32_t nextPriority = node->priority;
         if (maxPriority < nextPriority) {
             maxPriority = nextPriority;
         }
     }
 
+    // Set value d
     d = 1 + maxPriority;
 
-    vector<vector<uint32_t>> M(d);
-
+    // Find maximum value of M, by counting the number of nodes with a given priority
+    Measure maxM(d, 0);
     for (int i = 0; i < d; i++) {
+        // Skip even positions
+        if (i % 2 == 0) {
+            continue;
+        }
+
+        // Find all nodes with priority i
+        for (auto &node: G->nodes) {
+            if (node->priority == i) {
+                maxM[i]++;
+            }
+        }
     }
+
+    cout << "maximum value of M=(";
+    for (int i = 0; i < d; i++) {
+        if (i > 0) {
+            cout << ",";
+        }
+        cout << maxM[i];
+    }
+    cout << ")" << endl;
 }
 
 shared_ptr<Measure> Solver::prog(shared_ptr<ProgressMeasure> &rho, shared_ptr<NodeSpec> &v, shared_ptr<NodeSpec> &w) {
@@ -96,7 +119,7 @@ shared_ptr<ProgressMeasure> Solver::lift(shared_ptr<ProgressMeasure> &rho, share
     // Store prog for every successor
     vector<shared_ptr<Measure>> progs;
 
-    for (uint32_t successor : (*v).successors) {
+    for (uint32_t successor: (*v).successors) {
         shared_ptr<NodeSpec> w = G->nodes[successor];
         progs.push_back(prog(rho, v, w));
     }
@@ -122,7 +145,7 @@ shared_ptr<ProgressMeasure> Solver::lift(shared_ptr<ProgressMeasure> &rho, share
 }
 
 bool Solver::isStabilised(shared_ptr<ProgressMeasure> &rho, shared_ptr<ProgressMeasure> &rhoLifted) {
-    for (shared_ptr<NodeSpec> &node : G->nodes) {
+    for (shared_ptr<NodeSpec> &node: G->nodes) {
         Measure measureRho = (*(*rho)[node]);
         Measure measureRhoLifted = (*(*rhoLifted)[node]);
 
@@ -145,69 +168,69 @@ bool Solver::isStabilised(shared_ptr<ProgressMeasure> &rho, shared_ptr<ProgressM
     return true;
 }
 
-shared_ptr<ProgressMeasure> Solver::SPM(Strategy strategy) {
+shared_ptr<ProgressMeasure> Solver::SPM(LiftStrategy strategy) {
     // Initialize rho with zeroes
     shared_ptr<ProgressMeasure> rho;
-
-    for (shared_ptr<NodeSpec> &node : G->nodes) {
-        vector<uint32_t> zeroes(d, 0);
-        shared_ptr<Measure> measure = make_shared<Measure>(zeroes);
-
+    for (shared_ptr<NodeSpec> &node: G->nodes) {
+        shared_ptr<Measure> measure = make_shared<Measure>(d, 0);
         (*rho)[node] = measure;
     }
 
     // Perform lifting according to strategy
     switch (strategy) {
-    case Strategy::Input: {
-        // Variables to keep track of looping
-        uint32_t nodesVisited = 0;
-        uint32_t nodesStabilised = 0;
-        uint32_t nodesTotal = G->nodes.size();
+        case LiftStrategy::Input: {
+            // Variables to keep track of looping
+            uint32_t nodesVisited = 0;
+            uint32_t nodesStabilised = 0;
+            uint32_t nodesTotal = G->nodes.size();
 
-        while (nodesStabilised < nodesTotal) {
-            shared_ptr<ProgressMeasure> rhoLifted = lift(rho, G->nodes[nodesVisited % nodesTotal]);
+            while (nodesStabilised < nodesTotal) {
+                shared_ptr<ProgressMeasure> rhoLifted = lift(rho, G->nodes[nodesVisited % nodesTotal]);
 
-            while (!isStabilised(rho, rhoLifted)) {
-                // If rho was not already stabilised, reset nodesStabilised
-                nodesStabilised = 0;
+                while (!isStabilised(rho, rhoLifted)) {
+                    // If rho was not already stabilised, reset nodesStabilised
+                    nodesStabilised = 0;
 
-                // Continue lifting rho
-                rho = rhoLifted;
-                rhoLifted = lift(rho, G->nodes[nodesVisited % nodesTotal]);
+                    // Continue lifting rho
+                    rho = rhoLifted;
+                    rhoLifted = lift(rho, G->nodes[nodesVisited % nodesTotal]);
+                }
+
+                nodesVisited++;
+                nodesStabilised++;
             }
 
-            nodesVisited++;
-            nodesStabilised++;
+            return rho;
         }
+        case LiftStrategy::Random: {
+            // Shuffle the nodes first
+            vector<shared_ptr<NodeSpec>> nodes = G->nodes;
+            shuffle(begin(nodes), end(nodes), default_random_engine{});
 
-        return rho;
-    }
-    case Strategy::Random:
-        // Shuffle the nodes first
-        vector<shared_ptr<NodeSpec>> nodes = G->nodes;
-        shuffle(begin(nodes), end(nodes), default_random_engine{});
+            // Variables to keep track of looping
+            uint32_t nodesVisited = 0;
+            uint32_t nodesStabilised = 0;
+            uint32_t nodesTotal = nodes.size();
 
-        // Variables to keep track of looping
-        uint32_t nodesVisited = 0;
-        uint32_t nodesStabilised = 0;
-        uint32_t nodesTotal = nodes.size();
+            while (nodesStabilised < nodesTotal) {
+                shared_ptr<ProgressMeasure> rhoLifted = lift(rho, nodes[nodesVisited % nodesTotal]);
 
-        while (nodesStabilised < nodesTotal) {
-            shared_ptr<ProgressMeasure> rhoLifted = lift(rho, nodes[nodesVisited % nodesTotal]);
+                while (!isStabilised(rho, rhoLifted)) {
+                    // If rho was not already stabilised, reset nodesStabilised
+                    nodesStabilised = 0;
 
-            while (!isStabilised(rho, rhoLifted)) {
-                // If rho was not already stabilised, reset nodesStabilised
-                nodesStabilised = 0;
+                    // Continue lifting rho
+                    rho = rhoLifted;
+                    rhoLifted = lift(rho, nodes[nodesVisited % nodesTotal]);
+                }
 
-                // Continue lifting rho
-                rho = rhoLifted;
-                rhoLifted = lift(rho, nodes[nodesVisited % nodesTotal]);
+                nodesVisited++;
+                nodesStabilised++;
             }
 
-            nodesVisited++;
-            nodesStabilised++;
+            return rho;
         }
-
-        return rho;
+        default:
+            return rho;
     }
 }

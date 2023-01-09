@@ -3,6 +3,7 @@
 #include <sstream>
 #include "ParityGame.h"
 #include "Parser.h"
+#include "Solver.h"
 
 using namespace std;
 
@@ -28,18 +29,27 @@ bool readFileContents(const char *filename, string &out) {
     return true;
 }
 
-int main() {
-    std::cout << "Hello, World!" << std::endl;
+int main(int argc, char **argv) {
+    if (argc < 2) {
+        cout << "Usage: parity_game_solver <pg_file>" << endl;
+        return 1;
+    }
+
+    // Read input files
+    string pgInput;
+    if (!readFileContents(argv[1], pgInput)) {
+        cerr << "Could not read parity game input file" << endl;
+        return 1;
+    }
 
     // Parse parity game
-    string pgText = "parity 4;\n1 3 0 1,3,4 \"Europe\";\n0 6 1 4,2 \"Africa\";\n4 5 1 0 \"Antarctica\";\n1 8 1 2,4,3 \"America\";\n3 6 0 4,2 \"Australia\";\n2 7 0 3,1,0,4 \"Asia\";";
     ParityGameParser pgp;
-    shared_ptr<ParityGame> pg = pgp.parse(pgText);
+    shared_ptr<ParityGame> pg = pgp.parse(pgInput);
 
     cout << "maxId = " << pg->maxId << endl;
-    for (auto n : pg->nodes) {
+    for (const auto &n: pg->nodes) {
         cout << "node: " << n->id << " " << n->priority << " " << (uint32_t) n->owner << " ";
-        for (auto s : n->successors) {
+        for (auto s: n->successors) {
             cout << s << ",";
         }
         cout << " ";
@@ -48,6 +58,10 @@ int main() {
         }
         cout << endl;
     }
+
+    // Solve it or something
+    Solver solver;
+    solver.initialize(pg);
 
     return 0;
 }
