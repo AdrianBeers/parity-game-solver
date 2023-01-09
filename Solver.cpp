@@ -4,10 +4,10 @@
 
 using namespace std;
 
-void Solver::initialize(shared_ptr<ParityGame> parityGame) {
+void Solver::initialize(shared_ptr<ParityGame> &parityGame) {
     uint32_t maxPriority = 0;
 
-    for (shared_ptr<NodeSpec> node : G->nodes) {
+    for (shared_ptr<NodeSpec> &node : G->nodes) {
         uint32_t nextPriority = (*node).priority;
 
         if (maxPriority < nextPriority) {
@@ -26,7 +26,6 @@ void Solver::initialize(shared_ptr<ParityGame> parityGame) {
 shared_ptr<Measure> Solver::prog(shared_ptr<ProgressMeasure> &rho, shared_ptr<NodeSpec> &v, shared_ptr<NodeSpec> &w) {
     uint32_t pv = (*v).priority;
     Measure rhow = (*(*rho)[w]);
-    Measure result;
 
     // Initialize result with zeroes
     vector<uint32_t> result(d, 0);
@@ -66,7 +65,7 @@ shared_ptr<Measure> Solver::prog(shared_ptr<ProgressMeasure> &rho, shared_ptr<No
     return make_shared<Measure>(result);
 }
 
-bool Solver::progLessOrEqual(shared_ptr<Measure> progA, shared_ptr<Measure> progB) {
+bool Solver::progLessOrEqual(shared_ptr<Measure> &progA, shared_ptr<Measure> &progB) const {
     // If progB is tau, return true
     if ((*progB).empty()) {
         return true;
@@ -123,7 +122,7 @@ shared_ptr<ProgressMeasure> Solver::lift(shared_ptr<ProgressMeasure> &rho, share
 }
 
 bool Solver::isStabilised(shared_ptr<ProgressMeasure> &rho, shared_ptr<ProgressMeasure> &rhoLifted) {
-    for (shared_ptr<NodeSpec> node : G->nodes) {
+    for (shared_ptr<NodeSpec> &node : G->nodes) {
         Measure measureRho = (*(*rho)[node]);
         Measure measureRhoLifted = (*(*rhoLifted)[node]);
 
@@ -150,7 +149,7 @@ shared_ptr<ProgressMeasure> Solver::SPM(Strategy strategy) {
     // Initialize rho with zeroes
     shared_ptr<ProgressMeasure> rho;
 
-    for (shared_ptr<NodeSpec> node : G->nodes) {
+    for (shared_ptr<NodeSpec> &node : G->nodes) {
         vector<uint32_t> zeroes(d, 0);
         shared_ptr<Measure> measure = make_shared<Measure>(zeroes);
 
