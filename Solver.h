@@ -14,7 +14,7 @@ typedef map<shared_ptr<NodeSpec>, shared_ptr<Measure>> ProgressMeasure;
 
 class Solver {
     shared_ptr<ParityGame> G;
-    vector<vector<uint32_t>> M;
+    Measure M;
     unsigned int d;
 
     shared_ptr<Measure> prog(shared_ptr<ProgressMeasure> &rho, shared_ptr<NodeSpec> &v, shared_ptr<NodeSpec> &w);

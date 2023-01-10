@@ -36,56 +36,45 @@ void Solver::initialize(shared_ptr<ParityGame> &parityGame) {
         }
     }
 
-    cout << "maximum value of M=(";
-    for (int i = 0; i < d; i++) {
-        if (i > 0) {
-            cout << ",";
-        }
-        cout << maxM[i];
-    }
-    cout << ")" << endl;
+    M = maxM;
 }
 
 shared_ptr<Measure> Solver::prog(shared_ptr<ProgressMeasure> &rho, shared_ptr<NodeSpec> &v, shared_ptr<NodeSpec> &w) {
     uint32_t pv = (*v).priority;
     Measure rhow = (*(*rho)[w]);
 
-    // Initialize result with zeroes
-    vector<uint32_t> result(d, 0);
+    // Initialize m with zeroes
+    vector<uint32_t> m(d, 0);
 
-    // If rhow is tau, the result will be tau as well
+    // If rhow is tau, m will be tau as well
     if (rhow.empty()) {
-        result.clear();
-        return make_shared<Measure>(result);
+        m.clear();
+        return make_shared<Measure>(m);
     }
 
     // Distinguish even and odd priority of v
     if (pv % 2 == 0) {
+        // For all elements in m up to pv, set it equal to corresponding element in rhow
         for (int i = 0; i <= pv; i++) {
-            result[i] = rhow[i];
+            m[i] = rhow[i];
         }
     } else {
         for (int i = 0; i <= pv; i++) {
             if (i < pv) {
-                // For all elements in the result excluding the last, set it equal to rhow
-                result[i] = rhow[i];
+                // For all elements in m prior to pv, set it equal to corresponding element in rhow
+                m[i] = rhow[i];
             } else {
-                for (int j = 0; j < M[pv].size(); j++) {
-                    if (rhow[i] == M[pv][j]) {
-                        if (j + 1 == M[pv].size()) {
-                            // If rho can not be incremented for this priority, the result becomes tau
-                            result.clear();
-                        } else {
-                            // Else, increment rho for this priority
-                            result[i] = M[pv][j + 1];
-                        }
-                    }
+                // For the last element, increment it if possible, otherwise lift m to tau
+                if (rhow[i] < M[pv]) {
+                    m[i] = rhow[i] + 1;
+                } else {
+                    m.clear();
                 }
             }
         }
     }
 
-    return make_shared<Measure>(result);
+    return make_shared<Measure>(m);
 }
 
 bool Solver::progLessOrEqual(shared_ptr<Measure> &progA, shared_ptr<Measure> &progB) const {
