@@ -42,7 +42,7 @@ void Solver::initialize(shared_ptr<ParityGame> &parityGame) {
 }
 
 shared_ptr<Measure> Solver::prog(shared_ptr<ProgressMeasure> &rho, shared_ptr<NodeSpec> &v, shared_ptr<NodeSpec> &w) {
-    uint32_t pv = (*v).priority;
+    uint32_t pv = v->priority;
     Measure rhow = (*(*rho)[w]);
 
     // Initialize m with zeroes
@@ -161,43 +161,22 @@ bool Solver::isStabilised(shared_ptr<ProgressMeasure> &rho, shared_ptr<ProgressM
 
 shared_ptr<ProgressMeasure> Solver::SPM(LiftStrategy strategy) {
     // Initialize rho with zeroes
-    shared_ptr<ProgressMeasure> rho;
+    shared_ptr<ProgressMeasure> rho = make_shared<ProgressMeasure>();
     for (shared_ptr<NodeSpec> &node: G->nodes) {
         shared_ptr<Measure> measure = make_shared<Measure>(d, 0);
         (*rho)[node] = measure;
     }
 
+    // Shuffle the nodes first for random strategy
+    vector<shared_ptr<NodeSpec>> nodes = G->nodes;
+    if (strategy == LiftStrategy::Random) {
+        shuffle(begin(nodes), end(nodes), default_random_engine{});
+    }
+
     // Perform lifting according to strategy
     switch (strategy) {
-        case LiftStrategy::Input: {
-            // Variables to keep track of looping
-            uint32_t nodesVisited = 0;
-            uint32_t nodesStabilised = 0;
-            uint32_t nodesTotal = G->nodes.size();
-
-            while (nodesStabilised < nodesTotal) {
-                shared_ptr<ProgressMeasure> rhoLifted = lift(rho, G->nodes[nodesVisited % nodesTotal]);
-
-                while (!isStabilised(rho, rhoLifted)) {
-                    // If rho was not already stabilised, reset nodesStabilised
-                    nodesStabilised = 0;
-
-                    // Continue lifting rho
-                    rho = rhoLifted;
-                    rhoLifted = lift(rho, G->nodes[nodesVisited % nodesTotal]);
-                }
-
-                nodesVisited++;
-                nodesStabilised++;
-            }
-
-            return rho;
-        }
+        case LiftStrategy::Input:
         case LiftStrategy::Random: {
-            // Shuffle the nodes first
-            vector<shared_ptr<NodeSpec>> nodes = G->nodes;
-            shuffle(begin(nodes), end(nodes), default_random_engine{});
-
             // Variables to keep track of looping
             uint32_t nodesVisited = 0;
             uint32_t nodesStabilised = 0;
