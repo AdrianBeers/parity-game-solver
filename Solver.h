@@ -7,7 +7,8 @@
 using namespace std;
 
 enum LiftStrategy { Input,
-                Random };
+                Random,
+                Predecessor};
 
 typedef vector<uint32_t> Measure;
 typedef map<shared_ptr<NodeSpec>, shared_ptr<Measure>> ProgressMeasure;

@@ -2,8 +2,10 @@
 #include <algorithm>
 #include <random>
 #include <iostream>
+#include <stack>
 
 using namespace std;
+
 
 void Solver::initialize(shared_ptr<ParityGame> &parityGame) {
     G = parityGame;
@@ -215,6 +217,48 @@ shared_ptr<ProgressMeasure> Solver::SPM(LiftStrategy strategy) {
 
                 nodesVisited++;
                 nodesStabilised++;
+            }
+
+            return rho;
+        }
+        case LiftStrategy::Predecessor: {
+            vector<bool> stacked(G->nodes.size());
+            stack<uint32_t> stack;
+            vector<vector<uint32_t>> predecessors(G->nodes.size());
+
+            for (shared_ptr<NodeSpec> const &node : G->nodes) {
+
+                if (!(*rho).at(node)->empty()) {
+                    stack.push(node->id);
+                    stacked[node->id];
+                }
+
+                // each successor has this node as a predecessor
+                // create the list of predecessors
+                for (auto &successor : node->successors) {
+                    predecessors[successor].push_back(node->id);
+                }
+            }
+
+            while (!stack.empty()) {
+                uint32_t nodeId = stack.top();
+                stacked[nodeId] = false;
+                stack.pop();
+
+                shared_ptr<NodeSpec> &node = G->nodes[nodeId];
+
+                shared_ptr<ProgressMeasure> rhoLifted = lift(rho, node);
+
+                if (rho->at(node) > rhoLifted->at(node)) {
+                    for (auto &predecessor: predecessors[nodeId]) {
+                        if (!stacked[predecessor] && !(*rho).at(G->nodes[predecessor])->empty()) {
+                            stacked[predecessor] = true;
+                            stack.push(predecessor);
+                        }
+                    }
+                    rho->at(node) = rhoLifted->at(node);
+                }
+
             }
 
             return rho;
