@@ -46,15 +46,16 @@ int main(int argc, char **argv) {
     ParityGameParser pgp;
     shared_ptr<ParityGame> pg = pgp.parse(pgInput);
 
-    cout << "maxId = " << pg->maxId << endl;
+    cout << "-- Parsing results --" << endl;
+    cout << "maxId=" << pg->maxId << endl;
     for (const auto &n: pg->nodes) {
-        cout << "node: " << n->id << " " << n->priority << " " << (uint32_t) n->owner << " ";
+        cout << "node: id=" << n->id << " prio=" << n->priority << " owner=" << (uint32_t) n->owner << " successors=";
         for (auto s: n->successors) {
             cout << s << ",";
         }
-        cout << " ";
+        cout << ' ';
         if (!n->name.empty()) {
-            cout << '"' << n->name << '"';
+            cout << "name=\"" << n->name << '"';
         }
         cout << endl;
     }
@@ -64,16 +65,22 @@ int main(int argc, char **argv) {
     solver.initialize(pg);
     const auto r = solver.SPM(LiftStrategy::Random);
 
-    cout << "result:" << endl;
+    cout << "-- Solving results --" << endl;
     for (const auto &k: *r) {
-        cout << "for node " << k.first->id << ": (";
-        for (int i = 0; i < k.second->size(); i++) {
-            if (i > 0) {
-                cout << ",";
+        cout << "node " << k.first->id << ": ";
+        if (k.second->empty()) {
+            cout << "tau";
+        } else {
+            cout << '(';
+            for (int i = 0; i < k.second->size(); i++) {
+                if (i > 0) {
+                    cout << ",";
+                }
+                cout << (*k.second)[i];
             }
-            cout << (*k.second)[i];
+            cout << ')';
         }
-        cout << ")" << endl;
+        cout << endl;
     }
 
     return 0;
