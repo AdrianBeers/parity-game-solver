@@ -62,10 +62,10 @@ int main(int argc, char **argv) {
     // Solve it or something
     Solver solver;
     solver.initialize(pg);
-    const auto r = solver.SPM(LiftStrategy::Input);
+    const auto r = solver.SPM(LiftStrategy::Random);
 
     cout << "result:" << endl;
-    for (const auto& k: *r) {
+    for (const auto &k: *r) {
         cout << "for node " << k.first->id << ": (";
         for (int i = 0; i < k.second->size(); i++) {
             if (i > 0) {

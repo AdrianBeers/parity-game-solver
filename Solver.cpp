@@ -164,37 +164,16 @@ shared_ptr<ProgressMeasure> Solver::SPM(LiftStrategy strategy) {
         (*rho)[node] = measure;
     }
 
+    // Shuffle the nodes first for random strategy
+    vector<shared_ptr<NodeSpec>> nodes = G->nodes;
+    if (strategy == LiftStrategy::Random) {
+        shuffle(begin(nodes), end(nodes), default_random_engine{});
+    }
+
     // Perform lifting according to strategy
     switch (strategy) {
-        case LiftStrategy::Input: {
-            // Variables to keep track of looping
-            uint32_t nodesVisited = 0;
-            uint32_t nodesStabilised = 0;
-            uint32_t nodesTotal = G->nodes.size();
-
-            while (nodesStabilised < nodesTotal) {
-                shared_ptr<ProgressMeasure> rhoLifted = lift(rho, G->nodes[nodesVisited % nodesTotal]);
-
-                while (!isStabilised(rho, rhoLifted)) {
-                    // If rho was not already stabilised, reset nodesStabilised
-                    nodesStabilised = 0;
-
-                    // Continue lifting rho
-                    rho = rhoLifted;
-                    rhoLifted = lift(rho, G->nodes[nodesVisited % nodesTotal]);
-                }
-
-                nodesVisited++;
-                nodesStabilised++;
-            }
-
-            return rho;
-        }
+        case LiftStrategy::Input:
         case LiftStrategy::Random: {
-            // Shuffle the nodes first
-            vector<shared_ptr<NodeSpec>> nodes = G->nodes;
-            shuffle(begin(nodes), end(nodes), default_random_engine{});
-
             // Variables to keep track of looping
             uint32_t nodesVisited = 0;
             uint32_t nodesStabilised = 0;
