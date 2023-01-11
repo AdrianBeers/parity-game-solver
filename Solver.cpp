@@ -209,37 +209,40 @@ shared_ptr<ProgressMeasure> Solver::SPM(LiftStrategy strategy) {
 
                 if (!(*rho).at(node)->empty()) {
                     stack.push(node->id);
-                    stacked[node->id];
+                    stacked[node->id] = true;
                 }
 
                 // each successor has this node as a predecessor
                 // create the list of predecessors
-                for (auto &successor : node->successors) {
+                for (auto successor : node->successors) {
                     predecessors[successor].push_back(node->id);
                 }
             }
 
             while (!stack.empty()) {
+
                 uint32_t nodeId = stack.top();
-                stacked[nodeId] = false;
                 stack.pop();
+                stacked[nodeId] = false;
 
                 shared_ptr<NodeSpec> &node = G->nodes[nodeId];
 
                 shared_ptr<ProgressMeasure> rhoLifted = lift(rho, node);
 
-                if (rho->at(node) > rhoLifted->at(node)) {
-                    for (auto &predecessor: predecessors[nodeId]) {
-                        if (!stacked[predecessor] && !(*rho).at(G->nodes[predecessor])->empty()) {
+
+                if ((*(*rho).at(node)) != (*(*rhoLifted).at(node))) {
+
+                    for (auto predecessor: predecessors[nodeId]) {
+                        if (!stacked[predecessor] && !(*(*rho).at(G->nodes[predecessor])).empty()) {
                             stacked[predecessor] = true;
                             stack.push(predecessor);
                         }
                     }
-                    rho->at(node) = rhoLifted->at(node);
+
+                    (*rho)[node] = (*rhoLifted).at(node);
+
                 }
-
             }
-
             return rho;
         }
         default:

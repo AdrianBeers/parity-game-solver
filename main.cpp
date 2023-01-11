@@ -63,7 +63,7 @@ int main(int argc, char **argv) {
     // Solve it or something
     Solver solver;
     solver.initialize(pg);
-    const auto r = solver.SPM(LiftStrategy::Random);
+    const auto r = solver.SPM(LiftStrategy::Predecessor);
 
     cout << "-- Solving results --" << endl;
     for (const auto &k: *r) {
