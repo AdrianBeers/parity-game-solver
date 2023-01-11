@@ -27,7 +27,10 @@ public:
 
     void addNode(shared_ptr<NodeSpec> &node);
 
-    explicit ParityGame(uint32_t maxId = 0);
+    explicit ParityGame();
+    explicit ParityGame(uint32_t maxId);
+private:
+    bool hasMaxId;
 };
 
 #endif // PARITY_GAME_SOLVER_PARITYGAME_H
