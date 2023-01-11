@@ -1,7 +1,6 @@
 #include "Solver.h"
 #include <algorithm>
 #include <random>
-#include <iostream>
 
 using namespace std;
 
@@ -40,7 +39,7 @@ void Solver::initialize(shared_ptr<ParityGame> &parityGame) {
 }
 
 shared_ptr<Measure> Solver::prog(shared_ptr<ProgressMeasure> &rho, shared_ptr<NodeSpec> &v, shared_ptr<NodeSpec> &w) {
-    uint32_t pv = (*v).priority;
+    uint32_t pv = v->priority;
     Measure rhow = (*(*rho)[w]);
 
     // Initialize m with zeroes
@@ -159,7 +158,7 @@ bool Solver::isStabilised(shared_ptr<ProgressMeasure> &rho, shared_ptr<ProgressM
 
 shared_ptr<ProgressMeasure> Solver::SPM(LiftStrategy strategy) {
     // Initialize rho with zeroes
-    shared_ptr<ProgressMeasure> rho;
+    shared_ptr<ProgressMeasure> rho = make_shared<ProgressMeasure>();
     for (shared_ptr<NodeSpec> &node: G->nodes) {
         shared_ptr<Measure> measure = make_shared<Measure>(d, 0);
         (*rho)[node] = measure;

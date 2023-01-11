@@ -62,6 +62,19 @@ int main(int argc, char **argv) {
     // Solve it or something
     Solver solver;
     solver.initialize(pg);
+    const auto r = solver.SPM(LiftStrategy::Input);
+
+    cout << "result:" << endl;
+    for (const auto& k: *r) {
+        cout << "for node " << k.first->id << ": (";
+        for (int i = 0; i < k.second->size(); i++) {
+            if (i > 0) {
+                cout << ",";
+            }
+            cout << (*k.second)[i];
+        }
+        cout << ")" << endl;
+    }
 
     return 0;
 }
