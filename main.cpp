@@ -107,7 +107,7 @@ int main(int argc, char **argv) {
 #if (CREATE_SUMMARY)
     if (!r->empty()) {
         cout << "node 0: ";
-        pprintMeasure(r->at(pg->nodes[0]));
+        pprintMeasure(r->at(0));
         cout << endl;
     }
     int nrVerticesDiamond = 0, nrVerticesBox = 0;
