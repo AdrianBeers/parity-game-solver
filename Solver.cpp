@@ -250,7 +250,7 @@ shared_ptr<ProgressMeasure> Solver::SPM(LiftStrategy strategy) {
                 n_lifts++;
 
 
-                if ((*(*rho).at(node)) != (*(*rhoLifted).at(node))) {
+                if (!isStabilised(rho, rhoLifted)) {
 
                     for (auto predecessor: predecessors[nodeId]) {
                         if (!queued[predecessor] && !(*rhoLifted).at(G->nodes[predecessor])->empty()) {

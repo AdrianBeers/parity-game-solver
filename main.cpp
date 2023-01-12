@@ -72,7 +72,7 @@ int main(int argc, char **argv) {
 
     // Solve formula on LTS using naive algorithm
     auto t1 = high_resolution_clock::now();
-    const auto r = solver.SPM(LiftStrategy::Random);
+    const auto r = solver.SPM(LiftStrategy::Predecessor);
     auto t2 = high_resolution_clock::now();
     duration<double, milli> diff = t2 - t1;
 
