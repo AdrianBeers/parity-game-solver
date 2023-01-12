@@ -130,9 +130,13 @@ shared_ptr<ProgressMeasure> Solver::lift(shared_ptr<ProgressMeasure> &rho, share
         }
     }
 
-    // Lift rho with resulting prog
+    // Lift rho with the max between rhov and the resulting prog
     ProgressMeasure rhoLifted = *rho;
-    rhoLifted[v] = progResult;
+
+    if (progLessOrEqual((*rho)[v], progResult)) {
+        // Lift rho with resulting prog
+        rhoLifted[v] = progResult;
+    }
 
     return make_shared<ProgressMeasure>(rhoLifted);
 }
