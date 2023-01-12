@@ -3,6 +3,8 @@
 #include <random>
 #include <iostream>
 #include <stack>
+#include <queue>
+#include <cmath>
 
 using namespace std;
 
@@ -173,6 +175,8 @@ shared_ptr<ProgressMeasure> Solver::SPM(LiftStrategy strategy) {
         shuffle(begin(nodes), end(nodes), default_random_engine{});
     }
 
+    uint32_t n_lifts = 0;
+
     // Perform lifting according to strategy
     switch (strategy) {
         case LiftStrategy::Input:
@@ -184,6 +188,7 @@ shared_ptr<ProgressMeasure> Solver::SPM(LiftStrategy strategy) {
 
             while (nodesStabilised < nodesTotal) {
                 shared_ptr<ProgressMeasure> rhoLifted = lift(rho, nodes[nodesVisited % nodesTotal]);
+                n_lifts++;
 
                 while (!isStabilised(rho, rhoLifted)) {
                     // If rho was not already stabilised, reset nodesStabilised
@@ -192,24 +197,29 @@ shared_ptr<ProgressMeasure> Solver::SPM(LiftStrategy strategy) {
                     // Continue lifting rho
                     rho = rhoLifted;
                     rhoLifted = lift(rho, nodes[nodesVisited % nodesTotal]);
+                    n_lifts++;
                 }
 
                 nodesVisited++;
                 nodesStabilised++;
             }
 
-            return rho;
-        }
-        case LiftStrategy::Predecessor: {
-            vector<bool> stacked(G->nodes.size());
+        } case LiftStrategy::Predecessor:
+            case LiftStrategy::PredecessorMax: {
+            vector<bool> queued(G->nodes.size());
+            priority_queue<pair<vector<uint32_t>,uint32_t>> queue;
             stack<uint32_t> stack;
             vector<vector<uint32_t>> predecessors(G->nodes.size());
 
             for (shared_ptr<NodeSpec> const &node : G->nodes) {
 
                 if (!(*rho).at(node)->empty()) {
-                    stack.push(node->id);
-                    stacked[node->id] = true;
+                    if (strategy == LiftStrategy::PredecessorMax) {
+                        queue.emplace((*(*rho).at(node)),node->id);
+                    } else {
+                        stack.push(node->id);
+                    }
+                    queued[node->id] = true;
                 }
 
                 // each successor has this node as a predecessor
@@ -219,33 +229,103 @@ shared_ptr<ProgressMeasure> Solver::SPM(LiftStrategy strategy) {
                 }
             }
 
-            while (!stack.empty()) {
+            while (strategy == LiftStrategy::PredecessorMax ? !queue.empty() : !stack.empty()) {
 
-                uint32_t nodeId = stack.top();
-                stack.pop();
-                stacked[nodeId] = false;
+                uint32_t nodeId =
+                        strategy == LiftStrategy::PredecessorMax ?
+                        queue.top().second :
+                        stack.top();
+
+                strategy == LiftStrategy::PredecessorMax ? queue.pop() : stack.pop();
+
+                queued[nodeId] = false;
 
                 shared_ptr<NodeSpec> &node = G->nodes[nodeId];
 
                 shared_ptr<ProgressMeasure> rhoLifted = lift(rho, node);
+                n_lifts++;
 
 
                 if ((*(*rho).at(node)) != (*(*rhoLifted).at(node))) {
 
                     for (auto predecessor: predecessors[nodeId]) {
-                        if (!stacked[predecessor] && !(*(*rho).at(G->nodes[predecessor])).empty()) {
-                            stacked[predecessor] = true;
-                            stack.push(predecessor);
+                        if (!queued[predecessor] && !(*rhoLifted).at(G->nodes[predecessor])->empty()) {
+                            queued[predecessor] = true;
+
+                            if (strategy == LiftStrategy::PredecessorMax) {
+                                queue.emplace((*(*rho).at(G->nodes[predecessor])),predecessor);
+                            } else {
+                                stack.push(predecessor);
+                            }
                         }
                     }
 
                     (*rho)[node] = (*rhoLifted).at(node);
-
                 }
             }
-            return rho;
         }
-        default:
-            return rho;
+        case LiftStrategy::FocusList: {
+            uint32_t phase = 1;
+            uint32_t num_attempts = 0;
+            uint32_t num_failed = 0;
+            uint32_t next_vertex = 0;
+            const uint32_t &V = G->nodes.size();
+            uint32_t max_size = V;
+            queue<pair<uint32_t, uint32_t>> focus_list;
+
+
+            while (true) {
+                num_attempts++;
+                shared_ptr<NodeSpec> &node = G->nodes[next_vertex];
+                if (phase == 1) {
+                    shared_ptr<ProgressMeasure> rhoLifted = lift(rho, node);
+                    n_lifts++;
+
+                    if ((*(*rho).at(node)) != (*(*rhoLifted).at(node))) {
+                        num_failed = 0;
+                        (*rho)[node] = (*rhoLifted).at(node);
+                        focus_list.emplace(next_vertex, 2);
+                    } else {
+                        num_failed++;
+                    }
+                    next_vertex = (next_vertex + 1) % V;
+
+                    if (num_failed == V) {
+                        break;
+                    }
+
+                    if (num_attempts == V || focus_list.size() == max_size) {
+                        phase = 2;
+                        num_attempts = 0;
+                    }
+
+                } else {
+                    pair<uint32_t, uint32_t> node_credit = focus_list.front();
+                    focus_list.pop();
+
+                    shared_ptr<NodeSpec> &node2 = G->nodes[node_credit.first];
+                    shared_ptr<ProgressMeasure> rhoLifted = lift(rho, node2);
+                    n_lifts++;
+
+                    if ((*(*rho).at(node2)) != (*(*rhoLifted).at(node2))) {
+                        focus_list.emplace(node2->id, node_credit.second + 2);
+                        (*rho)[node] = (*rhoLifted).at(node);
+                    } else if (node_credit.second > 0) {
+                        focus_list.emplace(node2->id, node_credit.second / 2);
+                    }
+
+                    if (focus_list.empty() || num_attempts == V) {
+                        if (!focus_list.empty()) {
+                            queue<pair<uint32_t, uint32_t>> empty;
+                            swap(focus_list,empty );
+                        }
+                        phase = 1;
+                        num_attempts = 0;
+                    }
+                }
+            }
+        }
     }
+    cout << "number of lifts: " << n_lifts << endl;
+    return rho;
 }
