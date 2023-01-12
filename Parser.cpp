@@ -133,7 +133,7 @@ shared_ptr<ParityGame> ParityGameParser::parse(string input) {
             node->successors.push_back(parseUnsignedInt32());
         } while (I[i] == ',' && i++);
 
-        requireWhiteSpace();
+        skipWhiteSpace();
         if (I[i] == '"') {
             i++;
             for (; I[i] != '"'; i++) {

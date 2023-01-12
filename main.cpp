@@ -7,6 +7,9 @@
 #include "Parser.h"
 #include "Solver.h"
 
+#define PRINT_PARSING false
+#define CREATE_SUMMARY true
+
 using namespace std;
 
 
@@ -31,6 +34,21 @@ bool readFileContents(const char *filename, string &out) {
     return true;
 }
 
+void pprintMeasure(shared_ptr<Measure> &m) {
+    if (m->empty()) {
+        cout << "tau";
+    } else {
+        cout << '(';
+        for (int i = 0; i < m->size(); i++) {
+            if (i > 0) {
+                cout << ",";
+            }
+            cout << m->at(i);
+        }
+        cout << ')';
+    }
+}
+
 int main(int argc, char **argv) {
     if (argc < 2) {
         cout << "Usage: parity_game_solver <pg_file>" << endl;
@@ -49,11 +67,16 @@ int main(int argc, char **argv) {
     shared_ptr<ParityGame> pg = pgp.parse(pgInput);
 
     cout << "-- Parsing results --" << endl;
+#if (PRINT_PARSING)
     cout << "maxId=" << pg->maxId << endl;
     for (const auto &n: pg->nodes) {
-        cout << "node: id=" << n->id << " prio=" << n->priority << " owner=" << (uint32_t) n->owner << " successors=";
-        for (auto s: n->successors) {
-            cout << s << ",";
+        cout << "node: id=" << n->id << " prio=" << n->priority << " owner=" << (uint32_t) n->owner
+             << " successors=";
+        for (int i = 0; i < n->successors.size(); i++) {
+            if (i > 0) {
+                cout << ",";
+            }
+            cout << i;
         }
         cout << ' ';
         if (!n->name.empty()) {
@@ -61,8 +84,12 @@ int main(int argc, char **argv) {
         }
         cout << endl;
     }
+#else
+    cout << "#nodes=" << pg->nodes.size() << endl;
+#endif
 
     // Solve it or something
+    cout << "-- Solving results --" << endl;
     Solver solver;
     solver.initialize(pg);
 
@@ -76,26 +103,30 @@ int main(int argc, char **argv) {
     auto t2 = high_resolution_clock::now();
     duration<double, milli> diff = t2 - t1;
 
-    cout << "Algorithm execution time: " << diff.count() << " ms" << endl;
-
-
-    cout << "-- Solving results --" << endl;
-    for (const auto &k: *r) {
-        cout << "node " << k.first->id << ": ";
-        if (k.second->empty()) {
-            cout << "tau";
-        } else {
-            cout << '(';
-            for (int i = 0; i < k.second->size(); i++) {
-                if (i > 0) {
-                    cout << ",";
-                }
-                cout << (*k.second)[i];
-            }
-            cout << ')';
-        }
+    cout << "Execution time: " << diff.count() << " ms" << endl;
+#if (CREATE_SUMMARY)
+    if (!r->empty()) {
+        cout << "node 0: ";
+        pprintMeasure(r->at(pg->nodes[0]));
         cout << endl;
     }
+    int nrVerticesDiamond = 0, nrVerticesBox = 0;
+    for (const auto &p : *r) {
+        if (p.second->empty()) {
+            nrVerticesBox++;
+        } else {
+            nrVerticesDiamond++;
+        }
+    }
+    cout << "nrVerticesDiamond=" << nrVerticesDiamond << endl;
+    cout << "nrVerticesBox=" << nrVerticesBox << endl;
+#else
+    for (const auto &k: *r) {
+        cout << "node " << k.first->id << ": ";
+        pprintMeasure((shared_ptr<Measure> &) k.second);
+        cout << endl;
+    }
+#endif
 
     return 0;
 }

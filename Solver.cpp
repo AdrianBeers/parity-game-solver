@@ -208,18 +208,19 @@ shared_ptr<ProgressMeasure> Solver::SPM(LiftStrategy strategy) {
                 nodesStabilised++;
             }
 
-        } case LiftStrategy::Predecessor:
-            case LiftStrategy::PredecessorMax: {
+        }
+        case LiftStrategy::Predecessor:
+        case LiftStrategy::PredecessorMax: {
             vector<bool> queued(G->nodes.size());
-            priority_queue<pair<vector<uint32_t>,uint32_t>> queue;
+            priority_queue<pair<vector<uint32_t>, uint32_t>> queue;
             stack<uint32_t> stack;
             vector<vector<uint32_t>> predecessors(G->nodes.size());
 
-            for (shared_ptr<NodeSpec> const &node : G->nodes) {
+            for (shared_ptr<NodeSpec> const &node: G->nodes) {
 
                 if (!(*rho).at(node)->empty()) {
                     if (strategy == LiftStrategy::PredecessorMax) {
-                        queue.emplace((*(*rho).at(node)),node->id);
+                        queue.emplace((*(*rho).at(node)), node->id);
                     } else {
                         stack.push(node->id);
                     }
@@ -228,7 +229,7 @@ shared_ptr<ProgressMeasure> Solver::SPM(LiftStrategy strategy) {
 
                 // each successor has this node as a predecessor
                 // create the list of predecessors
-                for (auto successor : node->successors) {
+                for (auto successor: node->successors) {
                     predecessors[successor].push_back(node->id);
                 }
             }
@@ -257,7 +258,7 @@ shared_ptr<ProgressMeasure> Solver::SPM(LiftStrategy strategy) {
                             queued[predecessor] = true;
 
                             if (strategy == LiftStrategy::PredecessorMax) {
-                                queue.emplace((*(*rho).at(G->nodes[predecessor])),predecessor);
+                                queue.emplace((*(*rho).at(G->nodes[predecessor])), predecessor);
                             } else {
                                 stack.push(predecessor);
                             }
@@ -321,7 +322,7 @@ shared_ptr<ProgressMeasure> Solver::SPM(LiftStrategy strategy) {
                     if (focus_list.empty() || num_attempts == V) {
                         if (!focus_list.empty()) {
                             queue<pair<uint32_t, uint32_t>> empty;
-                            swap(focus_list,empty );
+                            swap(focus_list, empty);
                         }
                         phase = 1;
                         num_attempts = 0;
