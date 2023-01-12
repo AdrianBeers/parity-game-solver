@@ -326,6 +326,6 @@ shared_ptr<ProgressMeasure> Solver::SPM(LiftStrategy strategy) {
             }
         }
     }
-    cout << "number of lifts: " << n_lifts << endl;
+    cout << "Number of lifts: " << n_lifts << endl;
     return rho;
 }

@@ -1,6 +1,8 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <ratio>
+#include <chrono>
 #include "ParityGame.h"
 #include "Parser.h"
 #include "Solver.h"
@@ -63,7 +65,19 @@ int main(int argc, char **argv) {
     // Solve it or something
     Solver solver;
     solver.initialize(pg);
-    const auto r = solver.SPM(LiftStrategy::Predecessor);
+
+    using std::chrono::high_resolution_clock;
+    using std::chrono::duration;
+    using std::milli;
+
+    // Solve formula on LTS using naive algorithm
+    auto t1 = high_resolution_clock::now();
+    const auto r = solver.SPM(LiftStrategy::Random);
+    auto t2 = high_resolution_clock::now();
+    duration<double, milli> diff = t2 - t1;
+
+    cout << "Algorithm execution time: " << diff.count() << " ms" << endl;
+
 
     cout << "-- Solving results --" << endl;
     for (const auto &k: *r) {
