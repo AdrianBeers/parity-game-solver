@@ -8,7 +8,7 @@
 #include "Solver.h"
 
 #define PRINT_PARSING false
-#define CREATE_SUMMARY true
+#define CREATE_SUMMARY false
 
 using namespace std;
 
@@ -51,7 +51,7 @@ void pprintMeasure(shared_ptr<Measure> &m) {
 
 int main(int argc, char **argv) {
     if (argc < 2) {
-        cout << "Usage: parity_game_solver <pg_file>" << endl;
+        cout << "Usage: parity_game_solver <gm_file>" << endl;
         return 1;
     }
 
@@ -122,7 +122,7 @@ int main(int argc, char **argv) {
     cout << "nrVerticesBox=" << nrVerticesBox << endl;
 #else
     for (const auto &k: *r) {
-        cout << "node " << k.first->id << ": ";
+        cout << "node " << k.first << ": ";
         pprintMeasure((shared_ptr<Measure> &) k.second);
         cout << endl;
     }
