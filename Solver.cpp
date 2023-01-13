@@ -252,7 +252,7 @@ shared_ptr<ProgressMeasure> Solver::SPM(LiftStrategy strategy) {
             uint32_t num_failed = 0;
             uint32_t next_vertex = 0;
             const uint32_t &V = G->nodes.size();
-            uint32_t max_size = V;
+            uint32_t max_size = V/10 < 3 ? V : V/10;
             queue<pair<uint32_t, uint32_t>> focus_list;
 
             while (true) {
